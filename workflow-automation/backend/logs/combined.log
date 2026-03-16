@@ -1947,3 +1947,9 @@
 {"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:19:48"}
 {"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:19:53"}
 {"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:20:24"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:21:24"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:22:24"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:23:23"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:24:23"}
+{"level":"info","message":"Server running on port 5000 in development mode","timestamp":"2026-03-16 18:25:11"}
+{"level":"info","message":"MongoDB connected: ac-szpn8q1-shard-00-00.batzwig.mongodb.net","timestamp":"2026-03-16 18:25:12"}

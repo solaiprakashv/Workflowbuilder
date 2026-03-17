@@ -37,7 +37,7 @@ const resolveActiveWorkflow = async (workflowId) => {
   return activeWorkflow;
 };
 
-const startExecution = async (workflowId, data, userId) => {
+const startExecution = async (workflowId, data, userId = 'system_trigger') => {
   const workflow = await resolveActiveWorkflow(workflowId);
   if (!workflow.is_active) {
     const err = new Error('Workflow is not active');
@@ -89,7 +89,7 @@ const startExecution = async (workflowId, data, userId) => {
     workflow_id: workflow.id,
     workflow_version: workflow.version,
     data: data || {},
-    triggered_by: userId,
+    triggered_by: userId || 'system_trigger',
     status: 'pending',
     max_iterations: resolvedMaxIterations,
     iteration_count: 0
@@ -100,6 +100,62 @@ const startExecution = async (workflowId, data, userId) => {
 
   logger.info('Execution started', { execution_id: execution.id, workflow_id: workflowId });
   return execution;
+};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const waitForExecutionCompletion = async (executionId, timeoutMs = 15000) => {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const execution = await Execution.findOne({ id: executionId });
+    if (!execution) {
+      const err = new Error('Execution not found');
+      err.statusCode = 404;
+      throw err;
+    }
+    if (['completed', 'failed', 'canceled', 'waiting_for_approval'].includes(execution.status)) {
+      return { execution, timed_out: false };
+    }
+    await sleep(500);
+  }
+
+  const execution = await Execution.findOne({ id: executionId });
+  return { execution, timed_out: true };
+};
+
+const triggerExecution = async (workflowId, payload = {}, options = {}) => {
+  const workflow = await resolveActiveWorkflow(workflowId);
+  if (!workflow.is_active) {
+    const err = new Error('Workflow is not active');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const providedSecret = options.triggerSecret || payload.trigger_secret || null;
+  if (workflow.trigger_secret && workflow.trigger_secret !== providedSecret) {
+    const err = new Error('Invalid trigger secret');
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const execution = await startExecution(workflow.id, payload.data || {}, options.triggeredBy || 'external_trigger');
+
+  if (!options.waitForCompletion) {
+    return {
+      mode: 'async',
+      execution_id: execution.id,
+      status: execution.status
+    };
+  }
+
+  const { execution: finalExecution, timed_out } = await waitForExecutionCompletion(execution.id, options.timeoutMs || 15000);
+  return {
+    mode: timed_out ? 'timeout' : 'sync',
+    execution_id: finalExecution.id,
+    status: finalExecution.status,
+    data: finalExecution.data,
+    timed_out: Boolean(timed_out)
+  };
 };
 
 const getExecution = async (id) => {
@@ -373,6 +429,7 @@ const listExecutions = async ({ page = 1, limit = 10, workflow_id, status }) => 
 
 module.exports = {
   startExecution,
+  triggerExecution,
   getExecution,
   cancelExecution,
   retryExecution,

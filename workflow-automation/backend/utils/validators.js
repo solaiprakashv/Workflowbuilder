@@ -24,13 +24,14 @@ const workflowSchema = z.object({
   name: z.string().min(1).max(100),
   input_schema: z.record(inputFieldSchema).optional(),
   max_iterations: z.number().int().min(1).max(1000).optional(),
+  trigger_secret: z.string().min(8).max(256).optional().nullable(),
   start_step_id: z.string().uuid().optional().nullable(),
   is_active: z.boolean().optional()
 });
 
 const stepSchema = z.object({
   name: z.string().min(1).max(100),
-  step_type: z.enum(['task', 'approval', 'notification']),
+  step_type: z.enum(['task', 'approval', 'notification', 'node', 'trigger']),
   order: z.number().int().min(0),
   metadata: z.record(z.any()).optional()
 });
@@ -45,11 +46,19 @@ const executeSchema = z.object({
   data: z.record(z.any()).optional().default({})
 });
 
+const triggerExecuteSchema = z.object({
+  data: z.record(z.any()).optional().default({}),
+  trigger_secret: z.string().optional(),
+  wait_for_completion: z.boolean().optional().default(false),
+  timeout_ms: z.number().int().min(1000).max(120000).optional().default(15000)
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   workflowSchema,
   stepSchema,
   ruleSchema,
-  executeSchema
+  executeSchema,
+  triggerExecuteSchema
 };

@@ -10,12 +10,14 @@ import ExecuteModal from '../components/ExecuteModal';
 import VersionHistoryModal from '../components/VersionHistoryModal';
 import toast from 'react-hot-toast';
 
-const STEP_TYPES = ['task', 'approval', 'notification'];
+const STEP_TYPES = ['task', 'approval', 'notification', 'node', 'trigger'];
 const FIELD_TYPES = ['string', 'number', 'boolean'];
 const TYPE_COLORS = {
   task: 'bg-purple-100 text-purple-700 border-purple-200',
   approval: 'bg-orange-100 text-orange-700 border-orange-200',
-  notification: 'bg-teal-100 text-teal-700 border-teal-200'
+  notification: 'bg-teal-100 text-teal-700 border-teal-200',
+  node: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  trigger: 'bg-emerald-100 text-emerald-700 border-emerald-200'
 };
 
 const normalizeSchemaFields = (schema = {}) => Object.entries(schema).map(([name, config]) => {
@@ -47,7 +49,7 @@ export default function WorkflowBuilder() {
   const navigate = useNavigate();
   const isNew = id === 'new';
 
-  const [workflow, setWorkflow] = useState({ name: '', is_active: false, input_schema: {} });
+  const [workflow, setWorkflow] = useState({ name: '', is_active: false, input_schema: {}, trigger_secret: '' });
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -59,6 +61,7 @@ export default function WorkflowBuilder() {
   const [executeModal, setExecuteModal] = useState(false);
   const [versionModal, setVersionModal] = useState(false);
   const [stepForm, setStepForm] = useState({ name: '', step_type: 'task', order: 0, metadata: {} });
+  const [stepMetadataText, setStepMetadataText] = useState('{}');
   const [ruleForm, setRuleForm] = useState({ condition: '', next_step_id: '', priority: 1 });
   const [schemaFields, setSchemaFields] = useState([]);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
@@ -72,7 +75,14 @@ export default function WorkflowBuilder() {
       workflowAPI.getById(id)
         .then((res) => {
           const d = res.data.data;
-          setWorkflow({ name: d.name, is_active: d.is_active, input_schema: d.input_schema || {}, start_step_id: d.start_step_id, version: d.version });
+          setWorkflow({
+            name: d.name,
+            is_active: d.is_active,
+            input_schema: d.input_schema || {},
+            trigger_secret: d.trigger_secret || '',
+            start_step_id: d.start_step_id,
+            version: d.version
+          });
           setSchemaFields(normalizeSchemaFields(d.input_schema || {}));
           setSteps(d.steps || []);
         })
@@ -136,21 +146,32 @@ export default function WorkflowBuilder() {
 
   const openAddStep = () => {
     setStepForm({ name: '', step_type: 'task', order: steps.length, metadata: {} });
+    setStepMetadataText('{}');
     setStepModal({ open: true, editing: null });
   };
   const openEditStep = (step) => {
     setStepForm({ name: step.name, step_type: step.step_type, order: step.order, metadata: step.metadata || {} });
+    setStepMetadataText(JSON.stringify(step.metadata || {}, null, 2));
     setStepModal({ open: true, editing: step });
   };
   const submitStep = async () => {
     if (!stepForm.name.trim()) return toast.error('Step name required');
+
+    let parsedMetadata = {};
+    try {
+      parsedMetadata = stepMetadataText?.trim() ? JSON.parse(stepMetadataText) : {};
+    } catch {
+      return toast.error('Step metadata must be valid JSON');
+    }
+
+    const payload = { ...stepForm, metadata: parsedMetadata };
     try {
       if (stepModal.editing) {
-        const res = await stepAPI.update(stepModal.editing.id, stepForm);
+        const res = await stepAPI.update(stepModal.editing.id, payload);
         setSteps(steps.map((s) => s.id === stepModal.editing.id ? { ...res.data.data, rules: s.rules } : s));
         toast.success('Step updated');
       } else {
-        const res = await stepAPI.add(id, stepForm);
+        const res = await stepAPI.add(id, payload);
         setSteps([...steps, { ...res.data.data, rules: [] }]);
         toast.success('Step added');
       }
@@ -328,6 +349,17 @@ export default function WorkflowBuilder() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="e.g. Invoice Approval Workflow"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Secret (optional)</label>
+            <input
+              type="text"
+              value={workflow.trigger_secret || ''}
+              onChange={(e) => setWorkflow({ ...workflow, trigger_secret: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Protect /api/triggers/:workflow_id with secret"
+            />
+            <p className="text-xs text-gray-400 mt-1">Send this via x-trigger-secret header for external trigger calls.</p>
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -563,6 +595,17 @@ export default function WorkflowBuilder() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
               <input type="number" min={0} value={stepForm.order} onChange={(e) => setStepForm({ ...stepForm, order: Number(e.target.value) })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Metadata (JSON)</label>
+              <textarea
+                rows={8}
+                value={stepMetadataText}
+                onChange={(e) => setStepMetadataText(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={"{\n  \"operation\": \"set\",\n  \"parameters\": {\n    \"amount_with_tax\": \"{{ $json.amount * 1.18 }}\"\n  }\n}"}
+              />
+              <p className="text-xs text-gray-400 mt-1">For node steps use operation: set | transform | http_request | response with {{ expression }} bindings.</p>
             </div>
             <div className="flex gap-3 pt-2">
               <button onClick={() => setStepModal({ open: false, editing: null })} className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-50">Cancel</button>

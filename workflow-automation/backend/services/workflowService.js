@@ -116,6 +116,7 @@ const updateWorkflow = async (id, data, userId) => {
     name: data.name ?? previousWorkflow.name,
     input_schema: data.input_schema ?? previousWorkflow.input_schema,
     max_iterations: data.max_iterations ?? previousWorkflow.max_iterations,
+    trigger_secret: data.trigger_secret !== undefined ? data.trigger_secret : previousWorkflow.trigger_secret,
     version: newVersion,
     is_active: true,
     parent_workflow_id: rootWorkflowId,

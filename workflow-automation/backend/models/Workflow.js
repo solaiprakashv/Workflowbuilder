@@ -9,6 +9,7 @@ const workflowSchema = new mongoose.Schema({
   is_active: { type: Boolean, default: false },
   input_schema: { type: mongoose.Schema.Types.Mixed, default: {} },
   max_iterations: { type: Number, default: 20, min: 1, max: 1000 },
+  trigger_secret: { type: String, default: null },
   start_step_id: { type: String, default: null },
   created_by: { type: String, required: true }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });

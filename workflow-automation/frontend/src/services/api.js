@@ -65,6 +65,15 @@ export const executionAPI = {
   retry: (id) => api.post(`/executions/${id}/retry`)
 };
 
+export const triggerAPI = {
+  execute: (workflowId, data, options = {}) => api.post(`/triggers/${workflowId}`, {
+    data,
+    trigger_secret: options.trigger_secret,
+    wait_for_completion: Boolean(options.wait_for_completion),
+    timeout_ms: options.timeout_ms
+  })
+};
+
 // Templates
 export const templateAPI = {
   list: () => api.get('/templates'),

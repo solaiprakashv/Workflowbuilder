@@ -17,7 +17,7 @@ export default function Login() {
       await login(form);
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Login failed');
     } finally {
       setLoading(false);
     }

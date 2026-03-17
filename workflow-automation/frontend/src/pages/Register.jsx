@@ -17,7 +17,7 @@ export default function Register() {
       await register(form);
       navigate('/');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Registration failed');
     } finally {
       setLoading(false);
     }

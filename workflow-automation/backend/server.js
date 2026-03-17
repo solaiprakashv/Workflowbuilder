@@ -41,6 +41,7 @@ app.use('/api/workflows', require('./routes/workflows'));
 app.use('/api/steps', require('./routes/steps'));
 app.use('/api/rules', require('./routes/rules'));
 app.use('/api/executions', require('./routes/executions'));
+app.use('/api/triggers', require('./routes/triggers'));
 app.use('/api/templates', require('./routes/templates'));
 app.use('/api/metrics', require('./routes/metrics'));
 

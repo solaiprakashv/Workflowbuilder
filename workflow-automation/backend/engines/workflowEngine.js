@@ -4,6 +4,7 @@ const Rule = require('../models/Rule');
 const ruleEngine = require('./ruleEngine');
 const logger = require('../utils/logger');
 const notificationService = require('../services/notificationService');
+const { resolveValue, mergeOutput } = require('../utils/dynamicNode');
 
 class WorkflowEngine {
   async execute(execution, workflow, options = {}) {
@@ -30,6 +31,8 @@ class WorkflowEngine {
       let currentStepId = startStepId;
       let iterations = 0;
       let retryEventLogged = false;
+      let runtimeData = execution.data || {};
+      const nodeOutputs = {};
 
       while (currentStepId) {
         iterations += 1;
@@ -104,11 +107,26 @@ class WorkflowEngine {
         }
 
         // Execute the step
-        const stepResult = await this.executeStep(step, execution.data);
+        const stepResult = await this.executeStep(step, runtimeData, {
+          nodeOutputs,
+          workflow,
+          execution
+        });
         const stepEndedAt = new Date();
 
+        if (stepResult.success && stepResult.outputData && typeof stepResult.outputData === 'object') {
+          runtimeData = mergeOutput(runtimeData, stepResult.outputData);
+          execution.data = runtimeData;
+          await execution.save();
+        }
+
+        if (stepResult.success && stepResult.nodeOutput) {
+          nodeOutputs[step.id] = stepResult.nodeOutput;
+          nodeOutputs[step.name] = stepResult.nodeOutput;
+        }
+
         const rules = await Rule.find({ step_id: step.id });
-        const { matched, rule, evaluatedRules, errors } = ruleEngine.evaluateRules(rules, execution.data);
+        const { matched, rule, evaluatedRules, errors } = ruleEngine.evaluateRules(rules, runtimeData);
 
         const selectedNextStep = matched && rule ? rule.next_step_id : null;
         const ruleErrorMessage = errors.length > 0 ? errors.join(' | ') : null;
@@ -233,16 +251,138 @@ class WorkflowEngine {
     }
   }
 
-  async executeStep(step, data) {
+  async executeStep(step, data, runtimeContext = {}) {
     // Simulate step execution based on type
     try {
+      const expressionContext = {
+        $json: data || {},
+        $node: runtimeContext.nodeOutputs || {}
+      };
+
       switch (step.step_type) {
         case 'task':
+          if (step.metadata?.output && typeof step.metadata.output === 'object') {
+            const resolvedOutput = resolveValue(step.metadata.output, expressionContext);
+            return {
+              success: true,
+              message: `Task "${step.name}" executed successfully`,
+              metadata: { type: 'task', data },
+              outputData: resolvedOutput,
+              nodeOutput: resolvedOutput
+            };
+          }
+
           return {
             success: true,
             message: `Task "${step.name}" executed successfully`,
-            metadata: { type: 'task', data }
+            metadata: { type: 'task', data },
+            outputData: data,
+            nodeOutput: data
           };
+        case 'trigger':
+          return {
+            success: true,
+            message: `Trigger "${step.name}" processed`,
+            metadata: {
+              type: 'trigger',
+              trigger_type: step.metadata?.trigger_type || 'webhook'
+            },
+            outputData: data,
+            nodeOutput: data
+          };
+        case 'node': {
+          const operation = step.metadata?.operation || 'set';
+          const parameters = resolveValue(step.metadata?.parameters || {}, expressionContext);
+
+          if (operation === 'set') {
+            return {
+              success: true,
+              message: `Node "${step.name}" set output`,
+              metadata: {
+                type: 'node',
+                operation
+              },
+              outputData: parameters,
+              nodeOutput: parameters
+            };
+          }
+
+          if (operation === 'transform') {
+            return {
+              success: true,
+              message: `Node "${step.name}" transformed input`,
+              metadata: {
+                type: 'node',
+                operation
+              },
+              outputData: parameters,
+              nodeOutput: parameters
+            };
+          }
+
+          if (operation === 'response') {
+            const responsePayload = resolveValue(step.metadata?.response || parameters, expressionContext);
+            return {
+              success: true,
+              message: `Node "${step.name}" prepared response payload`,
+              metadata: {
+                type: 'node',
+                operation,
+                response: responsePayload
+              },
+              outputData: responsePayload,
+              nodeOutput: responsePayload
+            };
+          }
+
+          if (operation === 'http_request') {
+            const method = (parameters.method || 'GET').toUpperCase();
+            const url = parameters.url;
+
+            if (!url) {
+              return {
+                success: false,
+                message: `Node "${step.name}" missing HTTP url`
+              };
+            }
+
+            const response = await fetch(url, {
+              method,
+              headers: parameters.headers || {},
+              body: ['GET', 'HEAD'].includes(method) ? undefined : (parameters.body ? JSON.stringify(parameters.body) : undefined)
+            });
+
+            const contentType = response.headers.get('content-type') || '';
+            const responseData = contentType.includes('application/json')
+              ? await response.json()
+              : await response.text();
+
+            const normalized = {
+              status: response.status,
+              ok: response.ok,
+              data: responseData
+            };
+
+            return {
+              success: response.ok,
+              message: response.ok
+                ? `Node "${step.name}" executed HTTP request`
+                : `Node "${step.name}" HTTP request failed with ${response.status}`,
+              metadata: {
+                type: 'node',
+                operation,
+                request: { url, method }
+              },
+              outputData: { [step.metadata?.output_key || `${step.name}_response`]: normalized },
+              nodeOutput: normalized
+            };
+          }
+
+          return {
+            success: false,
+            message: `Unknown node operation: ${operation}`
+          };
+        }
         case 'approval':
           return {
             success: true,

@@ -5,7 +5,7 @@ const stepSchema = new mongoose.Schema({
   id: { type: String, default: uuidv4, unique: true },
   workflow_id: { type: String, required: true },
   name: { type: String, required: true, trim: true },
-  step_type: { type: String, enum: ['task', 'approval', 'notification'], required: true },
+  step_type: { type: String, enum: ['task', 'approval', 'notification', 'node', 'trigger'], required: true },
   order: { type: Number, required: true },
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });

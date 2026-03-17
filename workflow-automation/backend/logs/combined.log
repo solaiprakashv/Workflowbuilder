@@ -1953,3 +1953,55 @@
 {"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 18:24:23"}
 {"level":"info","message":"Server running on port 5000 in development mode","timestamp":"2026-03-16 18:25:11"}
 {"level":"info","message":"MongoDB connected: ac-szpn8q1-shard-00-00.batzwig.mongodb.net","timestamp":"2026-03-16 18:25:12"}
+{"level":"info","message":"Server running on port 5000 in development mode","timestamp":"2026-03-16 21:38:04"}
+{"level":"info","message":"MongoDB connected: ac-szpn8q1-shard-00-00.batzwig.mongodb.net","timestamp":"2026-03-16 21:38:04"}
+{"level":"debug","message":"GET /api/health","query":{},"timestamp":"2026-03-16 21:39:19"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:24"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:37"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:38"}
+{"level":"debug","message":"GET /api/auth/me","query":{},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/auth/me","query":{},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/workflows","query":{"limit":"5"},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"10"},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/workflows","query":{"limit":"5"},"timestamp":"2026-03-16 21:39:47"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"10"},"timestamp":"2026-03-16 21:39:48"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:48"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:52"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:39:57"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:02"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:07"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:12"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:17"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:23"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:27"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:32"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:37"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:42"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:47"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:53"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:40:57"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:41:02"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:41:07"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:41:23"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:42:23"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:43:24"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:44:24"}
+{"level":"debug","message":"GET /api/workflows","query":{"limit":"5"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"10"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/workflows","query":{"limit":"5"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"10"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:44:59"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:45:04"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:45:09"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:45:14"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:45:19"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:45:24"}
+{"level":"info","message":"Server running on port 5000 in development mode","timestamp":"2026-03-16 21:46:27"}
+{"level":"info","message":"MongoDB connected: ac-szpn8q1-shard-00-01.batzwig.mongodb.net","timestamp":"2026-03-16 21:46:28"}
+{"level":"debug","message":"GET /api/executions","query":{"limit":"50"},"timestamp":"2026-03-16 21:46:28"}
+{"level":"debug","message":"GET /api/health","query":{},"timestamp":"2026-03-16 21:46:56"}
+{"body":{"data":{}},"level":"debug","message":"POST /api/triggers/test-workflow","query":{},"timestamp":"2026-03-16 21:46:57"}
+{"level":"error","message":"Unhandled error Workflow not found","method":"POST","path":"/api/triggers/test-workflow","stack":"Error: Workflow not found\n    at resolveActiveWorkflow (C:\\Users\\solai prakash\\Videos\\HALLEYX\\workflow-automation\\backend\\services\\executionService.js:13:17)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Object.triggerExecution (C:\\Users\\solai prakash\\Videos\\HALLEYX\\workflow-automation\\backend\\services\\executionService.js:127:20)\n    at async executeTrigger (C:\\Users\\solai prakash\\Videos\\HALLEYX\\workflow-automation\\backend\\controllers\\triggerController.js:9:20)","timestamp":"2026-03-16 21:46:57"}
+{"level":"debug","message":"GET /api/auth/me","query":{},"timestamp":"2026-03-16 21:47:11"}

@@ -66,15 +66,39 @@ export default function Templates() {
       await workflowAPI.update(wf.id, { start_step_id: createdSteps[0]?.id });
 
       // 4. Create rules using step index mapping
-      for (const rule of template.rules) {
-        const stepId = createdSteps[rule.step_index]?.id;
+      // Backend enforces exactly one DEFAULT rule per step at all times,
+      // so add each step's DEFAULT rule before non-default rules.
+      const rulesByStep = template.rules.reduce((acc, rule) => {
+        const key = rule.step_index;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(rule);
+        return acc;
+      }, {});
+
+      const toRulePayload = (rule) => {
         const nextStepId = rule.next_step_index != null ? createdSteps[rule.next_step_index]?.id : null;
-        if (stepId) {
-          await ruleAPI.add(stepId, {
-            condition: rule.condition,
-            next_step_id: nextStepId || null,
-            priority: rule.priority
-          });
+        return {
+          condition: rule.condition,
+          next_step_id: nextStepId || null,
+          priority: rule.priority
+        };
+      };
+
+      for (const [stepIndex, stepRules] of Object.entries(rulesByStep)) {
+        const stepId = createdSteps[Number(stepIndex)]?.id;
+        if (!stepId) continue;
+
+        const defaultRule = stepRules.find((rule) => String(rule.condition || '').trim().toUpperCase() === 'DEFAULT');
+        if (defaultRule) {
+          await ruleAPI.add(stepId, toRulePayload(defaultRule));
+        }
+
+        const nonDefaultRules = stepRules
+          .filter((rule) => String(rule.condition || '').trim().toUpperCase() !== 'DEFAULT')
+          .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+
+        for (const rule of nonDefaultRules) {
+          await ruleAPI.add(stepId, toRulePayload(rule));
         }
       }
 

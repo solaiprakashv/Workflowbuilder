@@ -7,8 +7,13 @@ const ruleEngine = require('../engines/ruleEngine');
 const logger = require('../utils/logger');
 const { validateWorkflowInput } = require('../utils/workflowInputValidator');
 
-const resolveActiveWorkflow = async (workflowId) => {
-  const requested = await Workflow.findOne({ id: workflowId });
+const resolveActiveWorkflow = async (workflowId, userId) => {
+  const workflowQuery = { id: workflowId };
+  if (userId) {
+    workflowQuery.created_by = userId;
+  }
+
+  const requested = await Workflow.findOne(workflowQuery);
   if (!requested) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;
@@ -20,13 +25,19 @@ const resolveActiveWorkflow = async (workflowId) => {
   }
 
   const rootWorkflowId = requested.parent_workflow_id || requested.id;
-  const activeWorkflow = await Workflow.findOne({
+  const activeWorkflowQuery = {
     is_active: true,
     $or: [
       { id: rootWorkflowId },
       { parent_workflow_id: rootWorkflowId }
     ]
-  }).sort({ version: -1 });
+  };
+
+  if (userId) {
+    activeWorkflowQuery.created_by = userId;
+  }
+
+  const activeWorkflow = await Workflow.findOne(activeWorkflowQuery).sort({ version: -1 });
 
   if (!activeWorkflow) {
     const err = new Error('No active workflow version found');
@@ -38,7 +49,7 @@ const resolveActiveWorkflow = async (workflowId) => {
 };
 
 const startExecution = async (workflowId, data, userId = 'system_trigger') => {
-  const workflow = await resolveActiveWorkflow(workflowId);
+  const workflow = await resolveActiveWorkflow(workflowId, userId);
   if (!workflow.is_active) {
     const err = new Error('Workflow is not active');
     err.statusCode = 400;
@@ -124,7 +135,7 @@ const waitForExecutionCompletion = async (executionId, timeoutMs = 15000) => {
 };
 
 const triggerExecution = async (workflowId, payload = {}, options = {}) => {
-  const workflow = await resolveActiveWorkflow(workflowId);
+  const workflow = await resolveActiveWorkflow(workflowId, options.userId);
   if (!workflow.is_active) {
     const err = new Error('Workflow is not active');
     err.statusCode = 400;
@@ -158,8 +169,12 @@ const triggerExecution = async (workflowId, payload = {}, options = {}) => {
   };
 };
 
-const getExecution = async (id) => {
-  const execution = await Execution.findOne({ id });
+const getExecution = async (id, userId) => {
+  const query = { id };
+  if (userId) {
+    query.triggered_by = userId;
+  }
+  const execution = await Execution.findOne(query);
   if (!execution) {
     const err = new Error('Execution not found');
     err.statusCode = 404;
@@ -168,8 +183,12 @@ const getExecution = async (id) => {
   return execution;
 };
 
-const cancelExecution = async (id) => {
-  const execution = await Execution.findOne({ id });
+const cancelExecution = async (id, userId) => {
+  const query = { id };
+  if (userId) {
+    query.triggered_by = userId;
+  }
+  const execution = await Execution.findOne(query);
   if (!execution) {
     const err = new Error('Execution not found');
     err.statusCode = 404;
@@ -190,7 +209,11 @@ const cancelExecution = async (id) => {
 };
 
 const retryExecution = async (id, userId) => {
-  const execution = await Execution.findOne({ id });
+  const query = { id };
+  if (userId) {
+    query.triggered_by = userId;
+  }
+  const execution = await Execution.findOne(query);
   if (!execution) {
     const err = new Error('Execution not found');
     err.statusCode = 404;
@@ -252,7 +275,11 @@ const retryExecution = async (id, userId) => {
 };
 
 const approveExecution = async (id, approverId) => {
-  const execution = await Execution.findOne({ id });
+  const query = { id };
+  if (approverId) {
+    query.triggered_by = approverId;
+  }
+  const execution = await Execution.findOne(query);
   if (!execution) {
     const err = new Error('Execution not found');
     err.statusCode = 404;
@@ -333,7 +360,11 @@ const approveExecution = async (id, approverId) => {
 };
 
 const rejectExecution = async (id, approverId) => {
-  const execution = await Execution.findOne({ id });
+  const query = { id };
+  if (approverId) {
+    query.triggered_by = approverId;
+  }
+  const execution = await Execution.findOne(query);
   if (!execution) {
     const err = new Error('Execution not found');
     err.statusCode = 404;
@@ -415,8 +446,11 @@ const rejectExecution = async (id, approverId) => {
   return updated;
 };
 
-const listExecutions = async ({ page = 1, limit = 10, workflow_id, status }) => {
+const listExecutions = async ({ page = 1, limit = 10, workflow_id, status }, userId) => {
   const query = {};
+  if (userId) {
+    query.triggered_by = userId;
+  }
   if (workflow_id) query.workflow_id = workflow_id;
   if (status) query.status = status;
   const skip = (page - 1) * limit;

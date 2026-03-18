@@ -11,14 +11,14 @@ const execute = async (req, res, next) => {
 
 const getStatus = async (req, res, next) => {
   try {
-    const execution = await executionService.getExecution(req.params.id);
+    const execution = await executionService.getExecution(req.params.id, req.user.id);
     res.json({ success: true, data: execution });
   } catch (err) { next(err); }
 };
 
 const cancel = async (req, res, next) => {
   try {
-    const execution = await executionService.cancelExecution(req.params.id);
+    const execution = await executionService.cancelExecution(req.params.id, req.user.id);
     res.json({ success: true, data: execution });
   } catch (err) { next(err); }
 };
@@ -47,7 +47,7 @@ const reject = async (req, res, next) => {
 const list = async (req, res, next) => {
   try {
     const { page, limit, workflow_id, status } = req.query;
-    const result = await executionService.listExecutions({ page, limit, workflow_id, status });
+    const result = await executionService.listExecutions({ page, limit, workflow_id, status }, req.user.id);
     res.json({ success: true, data: result });
   } catch (err) { next(err); }
 };

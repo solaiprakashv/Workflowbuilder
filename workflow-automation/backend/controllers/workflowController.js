@@ -12,14 +12,14 @@ const create = async (req, res, next) => {
 const list = async (req, res, next) => {
   try {
     const { page, limit, search, is_active } = req.query;
-    const result = await workflowService.listWorkflows({ page, limit, search, is_active });
+    const result = await workflowService.listWorkflows({ page, limit, search, is_active }, req.user.id);
     res.json(result);
   } catch (err) { next(err); }
 };
 
 const getById = async (req, res, next) => {
   try {
-    const workflow = await workflowService.getWorkflowById(req.params.id);
+    const workflow = await workflowService.getWorkflowById(req.params.id, req.user.id);
     res.json({ success: true, data: workflow });
   } catch (err) { next(err); }
 };
@@ -34,21 +34,21 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
   try {
-    await workflowService.deleteWorkflow(req.params.id);
+    await workflowService.deleteWorkflow(req.params.id, req.user.id);
     res.json({ success: true, message: 'Workflow deleted' });
   } catch (err) { next(err); }
 };
 
 const getVersionHistory = async (req, res, next) => {
   try {
-    const versions = await workflowService.getVersionHistory(req.params.id);
+    const versions = await workflowService.getVersionHistory(req.params.id, req.user.id);
     res.json({ success: true, data: versions });
   } catch (err) { next(err); }
 };
 
 const getVersionSnapshot = async (req, res, next) => {
   try {
-    const snapshot = await workflowService.getVersionSnapshot(req.params.id, req.params.version);
+    const snapshot = await workflowService.getVersionSnapshot(req.params.id, req.params.version, req.user.id);
     res.json({ success: true, data: snapshot });
   } catch (err) { next(err); }
 };

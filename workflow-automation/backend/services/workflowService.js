@@ -53,12 +53,15 @@ const createWorkflow = async (data, userId) => {
   return workflow;
 };
 
-const listWorkflows = async ({ page = 1, limit = 10, search = '', is_active }) => {
+const listWorkflows = async ({ page = 1, limit = 10, search = '', is_active }, userId) => {
   const parsedPage = Math.max(Number(page) || 1, 1);
   const parsedLimit = Math.max(Number(limit) || 10, 1);
   const normalizedSearch = (search || '').trim();
 
   const query = {};
+  if (userId) {
+    query.created_by = userId;
+  }
   if (normalizedSearch) {
     query.name = { $regex: normalizedSearch, $options: 'i' };
   }
@@ -83,8 +86,12 @@ const listWorkflows = async ({ page = 1, limit = 10, search = '', is_active }) =
   };
 };
 
-const getWorkflowById = async (id) => {
-  const workflow = await Workflow.findOne({ id });
+const getWorkflowById = async (id, userId) => {
+  const query = { id };
+  if (userId) {
+    query.created_by = userId;
+  }
+  const workflow = await Workflow.findOne(query);
   if (!workflow) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;
@@ -95,7 +102,11 @@ const getWorkflowById = async (id) => {
 };
 
 const updateWorkflow = async (id, data, userId) => {
-  const previousWorkflow = await Workflow.findOne({ id });
+  const query = { id };
+  if (userId) {
+    query.created_by = userId;
+  }
+  const previousWorkflow = await Workflow.findOne(query);
   if (!previousWorkflow) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;
@@ -173,8 +184,12 @@ const updateWorkflow = async (id, data, userId) => {
   return finalizedWorkflow;
 };
 
-const deleteWorkflow = async (id) => {
-  const workflow = await Workflow.findOne({ id });
+const deleteWorkflow = async (id, userId) => {
+  const query = { id };
+  if (userId) {
+    query.created_by = userId;
+  }
+  const workflow = await Workflow.findOne(query);
   if (!workflow) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;
@@ -189,8 +204,12 @@ const deleteWorkflow = async (id) => {
   logger.info('Workflow deleted', { workflow_id: id });
 };
 
-const getVersionHistory = async (workflowId) => {
-  const workflow = await Workflow.findOne({ id: workflowId });
+const getVersionHistory = async (workflowId, userId) => {
+  const query = { id: workflowId };
+  if (userId) {
+    query.created_by = userId;
+  }
+  const workflow = await Workflow.findOne(query);
   if (!workflow) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;
@@ -203,8 +222,12 @@ const getVersionHistory = async (workflowId) => {
   return versions;
 };
 
-const getVersionSnapshot = async (workflowId, version) => {
-  const workflow = await Workflow.findOne({ id: workflowId });
+const getVersionSnapshot = async (workflowId, version, userId) => {
+  const query = { id: workflowId };
+  if (userId) {
+    query.created_by = userId;
+  }
+  const workflow = await Workflow.findOne(query);
   if (!workflow) {
     const err = new Error('Workflow not found');
     err.statusCode = 404;

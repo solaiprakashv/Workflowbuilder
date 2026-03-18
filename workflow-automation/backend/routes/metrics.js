@@ -7,17 +7,21 @@ router.use(authenticate);
 
 router.get('/', async (req, res, next) => {
   try {
+    const userId = req.user.id;
     const [
       totalWorkflows, activeWorkflows, totalExecutions,
       statusCounts, recentExecutions, avgDuration
     ] = await Promise.all([
-      Workflow.countDocuments(),
-      Workflow.countDocuments({ is_active: true }),
-      Execution.countDocuments(),
-      Execution.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-      Execution.find().sort({ created_at: -1 }).limit(30).select('status started_at ended_at workflow_id retries'),
+      Workflow.countDocuments({ created_by: userId }),
+      Workflow.countDocuments({ created_by: userId, is_active: true }),
+      Execution.countDocuments({ triggered_by: userId }),
       Execution.aggregate([
-        { $match: { status: 'completed', started_at: { $ne: null }, ended_at: { $ne: null } } },
+        { $match: { triggered_by: userId } },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]),
+      Execution.find({ triggered_by: userId }).sort({ created_at: -1 }).limit(30).select('status started_at ended_at workflow_id retries'),
+      Execution.aggregate([
+        { $match: { triggered_by: userId, status: 'completed', started_at: { $ne: null }, ended_at: { $ne: null } } },
         { $project: { duration: { $subtract: ['$ended_at', '$started_at'] } } },
         { $group: { _id: null, avg: { $avg: '$duration' }, max: { $max: '$duration' }, min: { $min: '$duration' } } }
       ])
@@ -33,7 +37,7 @@ router.get('/', async (req, res, next) => {
     // Daily execution trend (last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const dailyTrend = await Execution.aggregate([
-      { $match: { created_at: { $gte: sevenDaysAgo } } },
+      { $match: { triggered_by: userId, created_at: { $gte: sevenDaysAgo } } },
       { $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$created_at' } },
         count: { $sum: 1 },

@@ -2,6 +2,8 @@ const router = require('express').Router();
 const exec = require('../controllers/executionController');
 const { authenticate } = require('../middleware/auth');
 
+router.get('/email-action', exec.emailAction);
+
 router.use(authenticate);
 
 router.get('/', exec.list);

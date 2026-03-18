@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { executionAPI, workflowAPI } from '../services/api';
-import { sendApprovalEmail } from '../services/email';
 import {
   ArrowLeft, RefreshCw, XCircle, RotateCcw,
   CheckCircle, AlertCircle, Clock, Loader2, GitBranch
@@ -26,16 +25,8 @@ export default function ExecutionLogs() {
   const [workflowName, setWorkflowName] = useState('Workflow');
   const [workflowSteps, setWorkflowSteps] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approvalLoading, setApprovalLoading] = useState(null);
   const intervalRef = useRef(null);
-  const emailedApprovalKeys = useRef(new Set());
-
-  const resolveApproverName = ({ stepName, amount, existingApprover }) => {
-    if (existingApprover) return existingApprover;
-    if ((stepName || '').toLowerCase().includes('ceo')) return 'CEO';
-    if ((stepName || '').toLowerCase().includes('finance')) return 'Finance Officer';
-    if (Number(amount) < 100) return 'Manager';
-    return 'Finance Officer';
-  };
 
   const fetchExecution = useCallback(async () => {
     try {
@@ -76,45 +67,6 @@ export default function ExecutionLogs() {
   }, [execution?.workflow_id]);
 
   useEffect(() => {
-    if (!execution?.logs?.length) return;
-
-    const pendingApprovalLogs = execution.logs.filter((log) => {
-      const isApproval = log.step_type === 'approval';
-      const isPendingApproval = log.metadata?.approval_state === 'pending_approval' || log.status === 'started';
-      return isApproval && isPendingApproval;
-    });
-
-    pendingApprovalLogs.forEach(async (log) => {
-      const dedupeKey = `${execution.id}:${log.step_id}:${log.started_at || log.timestamp}`;
-      if (emailedApprovalKeys.current.has(dedupeKey)) return;
-
-      const amount = execution.data?.amount;
-      const approverName = resolveApproverName({
-        stepName: log.step_name,
-        amount,
-        existingApprover: log.approver_id
-      });
-
-      const instructions = log.metadata?.instructions || 'Please review and approve this workflow step.';
-      const message = `${instructions}\n\nWorkflow: ${workflowName}\nStep: ${log.step_name}\nAmount: ${amount != null ? amount : 'N/A'}`;
-
-      try {
-        await sendApprovalEmail({
-          toName: approverName,
-          workflowName,
-          stepName: log.step_name,
-          amount,
-          message
-        });
-        emailedApprovalKeys.current.add(dedupeKey);
-        toast.success(`Approval email sent to ${approverName}`);
-      } catch {
-        toast.error(`Failed to send approval email for ${log.step_name}`);
-      }
-    });
-  }, [execution, workflowName]);
-
-  useEffect(() => {
     startPolling();
     return () => stopPolling();
   }, [startPolling, stopPolling]);
@@ -147,6 +99,34 @@ export default function ExecutionLogs() {
     catch (err) { toast.error(err.response?.data?.message || 'Retry failed'); }
   };
 
+  const handleApprove = async () => {
+    try {
+      setApprovalLoading('approve');
+      await executionAPI.approve(id);
+      toast.success('Execution approved');
+      startPolling();
+      fetchExecution();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Approve failed');
+    } finally {
+      setApprovalLoading(null);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      setApprovalLoading('reject');
+      await executionAPI.reject(id);
+      toast.success('Execution rejected');
+      startPolling();
+      fetchExecution();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Reject failed');
+    } finally {
+      setApprovalLoading(null);
+    }
+  };
+
   if (loading) return <div className="flex justify-center items-center h-full"><Spinner size="lg" /></div>;
   if (!execution) return <div className="p-8 text-gray-500">Execution not found</div>;
 
@@ -177,6 +157,26 @@ export default function ExecutionLogs() {
             <button onClick={handleRetry} className="flex items-center gap-2 text-sm bg-green-50 text-green-600 border border-green-200 px-3 py-2 rounded-lg hover:bg-green-100">
               <RotateCcw size={14} /> Retry
             </button>
+          )}
+          {execution.status === 'waiting_for_approval' && (
+            <>
+              <button
+                onClick={handleApprove}
+                disabled={approvalLoading !== null}
+                className="flex items-center gap-2 text-sm bg-green-50 text-green-600 border border-green-200 px-3 py-2 rounded-lg hover:bg-green-100 disabled:opacity-50"
+              >
+                {approvalLoading === 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                Approve
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={approvalLoading !== null}
+                className="flex items-center gap-2 text-sm bg-red-50 text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-100 disabled:opacity-50"
+              >
+                {approvalLoading === 'reject' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                Reject
+              </button>
+            </>
           )}
         </div>
       </div>

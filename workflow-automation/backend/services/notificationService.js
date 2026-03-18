@@ -29,7 +29,7 @@ const getTransporter = () => {
 /**
  * Sends a workflow notification using configured channel.
  */
-const sendNotification = async ({ channel, recipient, template, data }) => {
+const sendNotification = async ({ channel, recipient, template, data, html }) => {
   if ((channel || 'email') !== 'email') {
     throw new Error(`Unsupported notification channel: ${channel}`);
   }
@@ -51,7 +51,8 @@ const sendNotification = async ({ channel, recipient, template, data }) => {
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: recipient,
     subject,
-    text: textBody
+    text: textBody,
+    html: html || undefined
   });
 
   return {

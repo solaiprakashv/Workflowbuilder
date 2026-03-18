@@ -62,7 +62,9 @@ export const executionAPI = {
   list: (params) => api.get('/executions', { params }),
   getById: (id) => api.get(`/executions/${id}`),
   cancel: (id) => api.post(`/executions/${id}/cancel`),
-  retry: (id) => api.post(`/executions/${id}/retry`)
+  retry: (id) => api.post(`/executions/${id}/retry`),
+  approve: (id) => api.post(`/executions/${id}/approve`),
+  reject: (id) => api.post(`/executions/${id}/reject`)
 };
 
 export const triggerAPI = {

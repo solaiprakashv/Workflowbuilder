@@ -5,6 +5,7 @@ const ruleEngine = require('./ruleEngine');
 const logger = require('../utils/logger');
 const notificationService = require('../services/notificationService');
 const { resolveValue, mergeOutput } = require('../utils/dynamicNode');
+const { createApprovalActionToken } = require('../utils/approvalActionToken');
 
 class WorkflowEngine {
   async execute(execution, workflow, options = {}) {
@@ -61,6 +62,7 @@ class WorkflowEngine {
         const stepStartedAt = new Date();
 
         if (step.step_type === 'approval') {
+          const approvalRecipient = step.metadata?.assignee_email || step.metadata?.recipient || null;
           const approvalLog = {
             step_id: step.id,
             step_name: step.name,
@@ -91,17 +93,79 @@ class WorkflowEngine {
                 pending_approval: {
                   execution_id: execution.id,
                   step_id: step.id,
-                  approver_email: step.metadata?.assignee_email || null,
+                  approver_email: approvalRecipient,
                   requested_at: new Date()
                 }
               }
             }
           );
 
+          if (approvalRecipient && approvalRecipient.includes('@')) {
+            try {
+              const approveToken = createApprovalActionToken({
+                executionId: execution.id,
+                stepId: step.id,
+                action: 'approve',
+                recipient: approvalRecipient
+              });
+              const rejectToken = createApprovalActionToken({
+                executionId: execution.id,
+                stepId: step.id,
+                action: 'reject',
+                recipient: approvalRecipient
+              });
+
+              const baseUrl = (
+                process.env.API_PUBLIC_URL ||
+                process.env.BACKEND_PUBLIC_URL ||
+                process.env.BACKEND_URL ||
+                `http://localhost:${process.env.PORT || 5000}`
+              ).replace(/\/$/, '');
+
+              const approveUrl = `${baseUrl}/api/executions/email-action?token=${encodeURIComponent(approveToken)}`;
+              const rejectUrl = `${baseUrl}/api/executions/email-action?token=${encodeURIComponent(rejectToken)}`;
+
+              const subject = `Approval required: ${workflow.name} - ${step.name}`;
+              const html = `
+                <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827;max-width:640px;margin:auto;">
+                  <h2 style="margin-bottom:8px;">Approval Required</h2>
+                  <p style="margin:0 0 10px;">Workflow: <strong>${workflow.name}</strong></p>
+                  <p style="margin:0 0 10px;">Step: <strong>${step.name}</strong></p>
+                  <p style="margin:0 0 16px;">Execution ID: <code>${execution.id}</code></p>
+                  <p style="margin:0 0 16px;">${step.metadata?.instructions || `Please review and decide for step "${step.name}".`}</p>
+                  <div style="display:flex;gap:10px;margin:18px 0;">
+                    <a href="${approveUrl}" style="background:#16a34a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600;">Approve</a>
+                    <a href="${rejectUrl}" style="background:#dc2626;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600;">Reject</a>
+                  </div>
+                  <p style="font-size:12px;color:#6b7280;">This secure link expires in 24 hours.</p>
+                </div>
+              `;
+
+              await notificationService.sendNotification({
+                channel: 'email',
+                recipient: approvalRecipient,
+                template: subject,
+                data: {
+                  execution_id: execution.id,
+                  workflow_name: workflow.name,
+                  step_name: step.name
+                },
+                html
+              });
+            } catch (approvalEmailError) {
+              logger.warn('Failed to send approval email', {
+                execution_id: execution.id,
+                step_id: step.id,
+                recipient: approvalRecipient,
+                error: approvalEmailError.message
+              });
+            }
+          }
+
           logger.info('Execution waiting for approval', {
             execution_id: execution.id,
             step_id: step.id,
-            approver_email: step.metadata?.assignee_email || null
+            approver_email: approvalRecipient
           });
           return;
         }

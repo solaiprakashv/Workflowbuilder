@@ -274,7 +274,7 @@ const retryExecution = async (id, userId) => {
   return retried;
 };
 
-const approveExecution = async (id, approverId) => {
+const approveExecution = async (id, approverId, options = {}) => {
   const query = { id };
   if (approverId) {
     query.triggered_by = approverId;
@@ -287,6 +287,12 @@ const approveExecution = async (id, approverId) => {
   }
   if (execution.status !== 'waiting_for_approval') {
     const err = new Error('Execution is not waiting for approval');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (options.expectedStepId && execution.pending_approval?.step_id !== options.expectedStepId) {
+    const err = new Error('Approval request is no longer valid for this step');
     err.statusCode = 400;
     throw err;
   }
@@ -359,7 +365,7 @@ const approveExecution = async (id, approverId) => {
   return refreshedExecution;
 };
 
-const rejectExecution = async (id, approverId) => {
+const rejectExecution = async (id, approverId, options = {}) => {
   const query = { id };
   if (approverId) {
     query.triggered_by = approverId;
@@ -372,6 +378,12 @@ const rejectExecution = async (id, approverId) => {
   }
   if (execution.status !== 'waiting_for_approval') {
     const err = new Error('Execution is not waiting for approval');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (options.expectedStepId && execution.pending_approval?.step_id !== options.expectedStepId) {
+    const err = new Error('Approval request is no longer valid for this step');
     err.statusCode = 400;
     throw err;
   }

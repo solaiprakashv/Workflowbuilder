@@ -20,11 +20,21 @@ const loginSchema = z.object({
   password: z.string().min(1)
 });
 
+const triggerSecretSchema = z.preprocess(
+  (value) => {
+    if (typeof value === 'string' && value.trim() === '') {
+      return null;
+    }
+    return value;
+  },
+  z.string().min(8).max(256).nullable().optional()
+);
+
 const workflowSchema = z.object({
   name: z.string().min(1).max(100),
   input_schema: z.record(inputFieldSchema).optional(),
   max_iterations: z.number().int().min(1).max(1000).optional(),
-  trigger_secret: z.string().min(8).max(256).optional().nullable(),
+  trigger_secret: triggerSecretSchema,
   start_step_id: z.string().uuid().optional().nullable(),
   is_active: z.boolean().optional()
 });

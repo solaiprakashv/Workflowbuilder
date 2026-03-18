@@ -125,7 +125,11 @@ export default function WorkflowBuilder() {
 
   const saveWorkflow = async () => {
     if (!workflow.name.trim()) return toast.error('Workflow name is required');
-    const payload = { ...workflow, input_schema: buildInputSchema() };
+    const payload = {
+      ...workflow,
+      input_schema: buildInputSchema(),
+      trigger_secret: workflow.trigger_secret?.trim() ? workflow.trigger_secret.trim() : null
+    };
     setSaving(true);
     try {
       if (isNew) {
@@ -294,7 +298,11 @@ export default function WorkflowBuilder() {
   };
   const setStartStep = async (stepId) => {
     try {
-      const res = await workflowAPI.update(id, { ...workflow, start_step_id: stepId });
+      const res = await workflowAPI.update(id, {
+        ...workflow,
+        start_step_id: stepId,
+        trigger_secret: workflow.trigger_secret?.trim() ? workflow.trigger_secret.trim() : null
+      });
       setWorkflow((w) => ({ ...w, start_step_id: stepId, version: res.data.data.version }));
       toast.success('Start step set');
     } catch { toast.error('Failed'); }

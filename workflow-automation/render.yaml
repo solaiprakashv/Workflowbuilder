@@ -29,5 +29,13 @@ services:
         sync: false
       - key: SMTP_SECURE
         value: "false"
+      - key: SMTP_FAMILY
+        value: "4"
+      - key: SMTP_FORCE_IPV4
+        value: "true"
       - key: SMTP_FROM
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
         sync: false

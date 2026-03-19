@@ -459,7 +459,12 @@ class WorkflowEngine {
           };
         case 'notification':
           const notificationChannel = step.metadata?.notification_channel || 'email';
-          const recipient = step.metadata?.recipient || step.metadata?.recipients?.[0] || null;
+          const recipientsList = Array.isArray(step.metadata?.recipients)
+            ? step.metadata.recipients.filter(Boolean)
+            : [];
+          const metadataRecipient = step.metadata?.recipient || recipientsList[0] || null;
+          const dataRecipient = data?.email || data?.recipient || data?.to || null;
+          const recipient = metadataRecipient || dataRecipient;
           const template = step.metadata?.template || `Workflow notification for ${step.name}`;
 
           try {

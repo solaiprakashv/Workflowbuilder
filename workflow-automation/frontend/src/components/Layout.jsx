@@ -40,11 +40,11 @@ export default function Layout({ children }) {
   return (
     <div className="flex h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Sidebar */}
-      <aside className="w-60 flex flex-col shrink-0 border-r" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border)' }}>
+      <aside className="w-60 flex flex-col shrink-0 border-r backdrop-blur-sm" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border)' }}>
         {/* Brand */}
         <div className="p-5 border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 rounded-lg flex items-center justify-center shadow-lg animate-float accent-glow">
               <Zap size={15} className="text-white" />
             </div>
             <div>
@@ -62,14 +62,14 @@ export default function Layout({ children }) {
               <Link key={path} to={path}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30'
+                    ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white shadow-md shadow-indigo-900/30'
                     : 'hover:bg-white/5 text-slate-400 hover:text-white'
                 }`}
               >
                 <Icon size={16} />
                 <span className="flex-1">{label}</span>
                 {badge > 0 && (
-                  <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">
+                  <span className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">
                     {badge}
                   </span>
                 )}
@@ -82,7 +82,7 @@ export default function Layout({ children }) {
         {/* New Workflow CTA */}
         <div className="px-3 pb-3">
           <Link to="/workflows/new"
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-blue-900/30"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-gradient-to-r from-indigo-500 via-violet-500 to-blue-500 hover:from-indigo-400 hover:via-violet-400 hover:to-blue-400 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-900/30"
           >
             <GitBranch size={13} /> New Workflow
           </Link>
@@ -91,7 +91,7 @@ export default function Layout({ children }) {
         {/* User + theme */}
         <div className="p-3 border-t" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-500 rounded-full flex items-center justify-center shrink-0 text-xs font-bold text-white accent-glow">
               {user?.name?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -111,7 +111,7 @@ export default function Layout({ children }) {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto page-enter">{children}</main>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import ExecuteModal from '../components/ExecuteModal';
 import toast from 'react-hot-toast';
 
 const StatCard = ({ label, value, icon: Icon, color, sub }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all page-enter">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-sm text-gray-500 font-medium">{label}</p>
@@ -68,7 +68,7 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="p-8">
+    <div className="p-8 page-enter">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -77,7 +77,7 @@ export default function Dashboard() {
         </div>
         <Link
           to="/workflows/new"
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-indigo-400 hover:via-violet-400 hover:to-blue-400 transition-all shadow-sm accent-glow"
         >
           <Plus size={16} /> New Workflow
         </Link>
@@ -85,10 +85,10 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Workflows" value={stats.workflows} icon={GitBranch} color="bg-blue-500" sub={`${stats.active} active`} />
-        <StatCard label="Total Executions" value={stats.executions} icon={Activity} color="bg-purple-500" sub="all time" />
-        <StatCard label="Completed" value={stats.completed} icon={CheckCircle} color="bg-green-500" sub="last 10" />
-        <StatCard label="Failed" value={stats.failed} icon={XCircle} color="bg-red-500" sub={stats.in_progress > 0 ? `${stats.in_progress} running` : 'none running'} />
+        <StatCard label="Total Workflows" value={stats.workflows} icon={GitBranch} color="bg-gradient-to-br from-indigo-500 to-blue-500" sub={`${stats.active} active`} />
+        <StatCard label="Total Executions" value={stats.executions} icon={Activity} color="bg-gradient-to-br from-violet-500 to-indigo-500" sub="all time" />
+        <StatCard label="Completed" value={stats.completed} icon={CheckCircle} color="bg-gradient-to-br from-emerald-500 to-teal-500" sub="last 10" />
+        <StatCard label="Failed" value={stats.failed} icon={XCircle} color="bg-gradient-to-br from-rose-500 to-orange-500" sub={stats.in_progress > 0 ? `${stats.in_progress} running` : 'none running'} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
